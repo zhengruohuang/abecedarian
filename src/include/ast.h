@@ -2,9 +2,25 @@
 #define __AST_H__
 
 
-struct single_list {
+/*
+ * List
+ */
+enum node_type {
+    nt_unknown,
+};
+
+struct list_node {
+    enum node_type type;
     void *node;
-    struct single_list *next;
+    
+    struct list_node *prev;
+    struct list_node *next;
+};
+
+struct list {
+    struct list_node *head;
+    struct list_node *tail;
+    int count;
 };
 
 
@@ -14,18 +30,18 @@ struct single_list {
 struct program_node {
     char *scope_name;
     
-    struct single_list *stmt_list;
-    struct single_list *func_list;
-    struct single_list *class_list;
+    struct list *stmt_list;
+    struct list *func_list;
+    struct list *class_list;
 };
 
 struct func_node {
-    struct single_list *stmt_list;
+    struct list *stmt_list;
 };
 
 struct class_node {
-    struct single_list *var_list;
-    struct single_list *func_list;
+    struct list *var_list;
+    struct list *func_list;
 };
 
 
@@ -33,7 +49,49 @@ struct class_node {
  * Statement
  */
 struct stmt_node {
-    
+    struct list *content_list;
+};
+
+struct block_node {
+    struct list *stmt_list;
+};
+
+
+/*
+ * Control
+ */
+struct if_node {
+    struct stmt_node *cond;
+    struct stmt_node *then_body;
+    struct stmt_node *else_body;
+};
+
+struct for_node {
+    struct stmt_node *init;
+    struct stmt_node *cond;
+    struct stmt_node *iter;
+    struct stmt_node *body;
+};
+
+struct do_node {
+    struct stmt_node *cond;
+    struct stmt_node *body;
+};
+
+struct while_node {
+    struct stmt_node *cond;
+    struct stmt_node *body;
+};
+
+struct switch_node {
+    struct stmt_node *value;
+    struct list *case_list;
+    struct stmt_node *def;
+};
+
+struct case_node {
+    struct stmt_node *value;
+    struct stmt_node *body;
 };
 
 

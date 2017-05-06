@@ -6,6 +6,14 @@ extern int yylex();
 
 void yyerror(const char *s);
 
+struct list *new_list();
+int append_to_list(struct list *list, void *node, enum node_type type);
+
+struct func_node *new_func(char *name, int exported, struct list *param_list);
+struct class_node *new_class(char *name, int exported, struct list *parent_list);
+struct name_node *new_name(char *text);
+struct value_node *new_value(char *text);
+
 %}
 
 
@@ -23,7 +31,6 @@ void yyerror(const char *s);
     struct name_node *name_node;
     struct value_node *value_node;
 }
-
 
 /*
  * Token
@@ -44,7 +51,6 @@ void yyerror(const char *s);
 /*
  * Node
  */
-
 
 /*
  * Operator precedence
@@ -120,12 +126,12 @@ var_id
  * Function
  */
 func
-    : func_dec block
+    : func_dec block    { $$ = $1; $$->body = $2; }
     ;
 
 func_dec
-    : KEY_FUNC TOK_NAME '(' ')'
-    | KEY_FUNC TOK_NAME '(' func_params ')'
+    : KEY_FUNC TOK_NAME '(' ')'             { $$ = new_func($2, 1, NULL); }
+    | KEY_FUNC TOK_NAME '(' func_params ')' { $$ = new_func($2, 1, $4); }
     ;
 
 func_params
@@ -189,7 +195,7 @@ expr_list
     ;
 
 expr
-    : TOK_NAME
+    : id_name
     | value
     
     /* Arithmetic */
@@ -271,9 +277,13 @@ value_str
     ;
 
 value
-    : value_str
-    | VAL_INT
-    | VAL_FLOAT
+    : value_str { /* FIXME */ }
+    | VAL_INT   { $$ = new_value($1); }
+    | VAL_FLOAT { $$ = new_value($1); }
+    ;
+
+id_name
+    : TOK_NAME  { $$ = new_name($1); }
     ;
 
 
@@ -385,4 +395,35 @@ ctrl_return
 void yyerror(const char* err)
 {
     printf("\nError:%s\n", err);
+}
+
+struct list *new_list()
+{
+    struct list *l = (struct list *)malloc(sizeof(struct list));
+    assert(l);
+    
+    l->tail = l->head = NULL;
+    l->count = 0;
+    
+    return l;
+}
+
+int append_to_list(struct list *list, enum node_type type, void *node)
+{
+    struct list_node *ln = (struct list_node *)malloc(sizeof(struct list_node));
+    assert(ln);
+    
+    ln->type = type;
+    ln->node = node;
+    
+    ln->prev = list->tail;
+    ln->next = NULL;
+    list->tail = ln;
+    if (!list->head) {
+        list->head = ln;
+    }
+    
+    list->count++;
+    
+    return 0;
 }
